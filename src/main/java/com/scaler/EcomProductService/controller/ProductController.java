@@ -2,23 +2,33 @@ package com.scaler.EcomProductService.controller;
 
 
 import com.scaler.EcomProductService.dto.ProductListResponseDTO;
+import com.scaler.EcomProductService.dto.ProductRequestDTO;
 import com.scaler.EcomProductService.dto.ProductResponseDTO;
 import com.scaler.EcomProductService.service.ProductService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 @RestController
 public class ProductController {
+    private final ProductService productService; // Making it as final since it is Immutable
 
-    @Autowired
-    @Qualifier("fakeStoreProductService")
-    private ProductService productService;
+    /*Field injection
+    //    @Autowired
+    //    @Qualifier("fakeStoreProductService")
+    //    private ProductService productService;
+     */
+
+    /* Constructor Injection */
+    @Autowired // This is now optional for constructor from Spring versions above 4
+    public ProductController(@Qualifier("fakeStoreProductService") ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping("/products")
     public ResponseEntity getAllproducts() {
@@ -46,10 +56,21 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/products/1")
-    public ResponseEntity getProductFromId() {
-        ProductResponseDTO response = productService.getProductById(1);
+    @GetMapping("/products/{id}")
+    public ResponseEntity getProductFromId(@PathVariable("id") int id) {
+        ProductResponseDTO response = productService.getProductById(id);
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/products")
+    public ResponseEntity createProduct(@RequestBody ProductRequestDTO productRequestDTO) {
+        ProductResponseDTO response = productService.createProduct(productRequestDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity deleteProductById(@PathVariable("id") int id) {
+        boolean response = productService.deleteProduct(id);
+        return ResponseEntity.ok(response);
+    }
 }
