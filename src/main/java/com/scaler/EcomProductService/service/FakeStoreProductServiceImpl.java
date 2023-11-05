@@ -1,61 +1,62 @@
 package com.scaler.EcomProductService.service;
 
-import com.scaler.EcomProductService.dto.ProductListResponseDTO;
-import com.scaler.EcomProductService.dto.ProductRequestDTO;
-import com.scaler.EcomProductService.dto.ProductResponseDTO;
+import com.scaler.EcomProductService.client.FakeStoreAPIClient;
+import com.scaler.EcomProductService.dto.*;
+import com.scaler.EcomProductService.exception.ProductNotFoundException;
 import com.scaler.EcomProductService.model.Product;
+
+import com.scaler.EcomProductService.util.ProductUtils;
+import org.apache.logging.log4j.util.ProcessIdUtil;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import static com.scaler.EcomProductService.mapper.ProductMapper.productRequestToFakeStoreProductRequest;
+import static com.scaler.EcomProductService.mapper.ProductMapper.fakeStoreProductResponseToProductResponse;
+import static com.scaler.EcomProductService.util.ProductUtils.isNull;
 
 import java.util.List;
 
 @Service("fakeStoreProductService")
 public class FakeStoreProductServiceImpl implements ProductService{
     private RestTemplateBuilder restTemplateBuilder;
+    private FakeStoreAPIClient fakeStoreAPIClient;
 
-    public FakeStoreProductServiceImpl(RestTemplateBuilder restTemplateBuilder) {
+    public FakeStoreProductServiceImpl(RestTemplateBuilder restTemplateBuilder, FakeStoreAPIClient fakeStoreAPIClient) {
         this.restTemplateBuilder = restTemplateBuilder;
+        this.fakeStoreAPIClient = fakeStoreAPIClient;
     }
 
     @Override
     public ProductListResponseDTO getAllProducts() {
-        String getAllProductsURL = "https://fakestoreapi.com/products";
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        ResponseEntity<ProductResponseDTO[]> productResponseArray =
-                restTemplate.getForEntity(getAllProductsURL, ProductResponseDTO[].class);
-
-        ProductListResponseDTO responseDTO = new ProductListResponseDTO();
-        for(ProductResponseDTO productResponse: productResponseArray.getBody()) {
-            responseDTO.getProducts().add(productResponse);
+        List<FakeStoreProductResponseDTO> fakeStoreProductResponseDTOS = fakeStoreAPIClient.getAllProducts();
+        ProductListResponseDTO productListResponseDTO = new ProductListResponseDTO();
+        for(FakeStoreProductResponseDTO fakeStoreProductResponseDTO: fakeStoreProductResponseDTOS) {
+            productListResponseDTO.getProducts().add(fakeStoreProductResponseToProductResponse(fakeStoreProductResponseDTO));
         }
-        return responseDTO;
+        return productListResponseDTO;
     }
 
     @Override
-    public ProductResponseDTO getProductById(int id) {
-        String getProductByIdURL = "https://fakestoreapi.com/products/" + id;
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        ResponseEntity<ProductResponseDTO> productResponse =
-                restTemplate.getForEntity(getProductByIdURL, ProductResponseDTO.class);
-        return productResponse.getBody();
+    public ProductResponseDTO getProductById(int id) throws ProductNotFoundException {
+        FakeStoreProductResponseDTO fakeStoreProductResponseDTO = fakeStoreAPIClient.getProductById(id);
+        if(isNull(fakeStoreProductResponseDTO)) {
+            throw new ProductNotFoundException("Product not found with id: "+ id);
+        }
+        return fakeStoreProductResponseToProductResponse(fakeStoreProductResponseDTO);
     }
 
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO product) {
-        String createProductURL = "https://fakestoreapi.com/products";
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        ResponseEntity<ProductResponseDTO> response =
-                restTemplate.postForEntity(createProductURL, product, ProductResponseDTO.class);
-        return response.getBody();
+        FakeStoreProductRequestDTO fakeStoreProductRequestDTO = productRequestToFakeStoreProductRequest(product);
+        FakeStoreProductResponseDTO fakeStoreProductResponseDTO = fakeStoreAPIClient.createProduct(fakeStoreProductRequestDTO);
+        return fakeStoreProductResponseToProductResponse(fakeStoreProductResponseDTO);
     }
 
     @Override
     public boolean deleteProduct(int id) {
-        String deleteProductURL = "https://fakestoreapi.com/products/" + id;
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        restTemplate.delete(deleteProductURL);
+        fakeStoreAPIClient.deleteProduct(id);
         return true;
     }
 

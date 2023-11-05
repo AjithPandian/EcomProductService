@@ -16,7 +16,7 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
-    public ProductResponseDTO getProductById(int id) {
+    public ProductResponseDTO getProductById (int id) {
         return null;
     }
 
