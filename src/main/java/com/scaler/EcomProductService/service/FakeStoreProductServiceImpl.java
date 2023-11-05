@@ -5,12 +5,7 @@ import com.scaler.EcomProductService.dto.*;
 import com.scaler.EcomProductService.exception.ProductNotFoundException;
 import com.scaler.EcomProductService.model.Product;
 
-import com.scaler.EcomProductService.util.ProductUtils;
-import org.apache.logging.log4j.util.ProcessIdUtil;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import static com.scaler.EcomProductService.mapper.ProductMapper.productRequestToFakeStoreProductRequest;
 import static com.scaler.EcomProductService.mapper.ProductMapper.fakeStoreProductResponseToProductResponse;
@@ -20,11 +15,9 @@ import java.util.List;
 
 @Service("fakeStoreProductService")
 public class FakeStoreProductServiceImpl implements ProductService{
-    private RestTemplateBuilder restTemplateBuilder;
     private FakeStoreAPIClient fakeStoreAPIClient;
 
-    public FakeStoreProductServiceImpl(RestTemplateBuilder restTemplateBuilder, FakeStoreAPIClient fakeStoreAPIClient) {
-        this.restTemplateBuilder = restTemplateBuilder;
+    public FakeStoreProductServiceImpl( FakeStoreAPIClient fakeStoreAPIClient) {
         this.fakeStoreAPIClient = fakeStoreAPIClient;
     }
 
